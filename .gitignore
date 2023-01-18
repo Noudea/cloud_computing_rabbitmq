@@ -1,0 +1,21 @@
+# IntelliJ IDEA files
+.idea/
+
+# macOS files
+.DS_Store
+
+# Node.js files
+node_modules
+npm-debug.log
+
+# Log files
+*.log
+
+# Build artifacts
+dist/
+
+# Environment variables
+production.env
+
+#database
+database

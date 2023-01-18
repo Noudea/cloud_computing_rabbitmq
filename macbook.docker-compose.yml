@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+
+  ampq_node:
+    image: arm64v8/node:16
+    container_name: ampq_node
+    volumes:
+      - .:/app
+    working_dir: /app
+    ports:
+      - "8000:8000"
+    command: bash -c "bash ./wait-for-it.sh ampq_rabbitmq:5672 --timeout=30 && yarn install && yarn dev"
+    depends_on:
+      - ampq_mongodb
+      - ampq_rabbitmq
+    networks:
+      - test_amqp_network
+
+  ampq_mongodb:
+    container_name: ampq_mongodb
+    image: arm64v8/mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./database/mongo:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: admin
+    networks:
+      - test_amqp_network
+
+  ampq_rabbitmq:
+    image: rabbitmq:3.11-management
+    container_name: ampq_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=password
+    networks:
+      - test_amqp_network
+
+networks:
+  test_amqp_network:
+
