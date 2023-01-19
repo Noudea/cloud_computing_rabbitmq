@@ -1,15 +1,9 @@
-import express from "express";
 import amqplib from "amqplib";
 import mongoose from 'mongoose'
 import * as dotenv from "dotenv";
 import Commande from './Commande.js'
 
 dotenv.config();
-
-//setup express
-const app = express();
-const port = 8000
-app.use(express.json());
 
 // connect mongodb
 mongoose.connect(process.env.DATABASE_URL, {}, (error) => {
@@ -104,51 +98,9 @@ const rabbitmq = {
     } catch (error) {
       console.log(error)
     }
-  },
-  publishMessage : async function(message) {
-    try {
-      const channel = await rabbitMqChannel.getInstance()
-      channel.publish('commande', 'commande', Buffer.from(JSON.stringify(message)))
-    } catch (error) {
-      console.log(error)
-    }
   }
 }
 
+
 await rabbitmq.init()
 await rabbitmq.commandeWorker()
-
-//api routes
-app.get('/', (req, res) => {
-    res.send('Hello World!')
-})
-
-app.get('/commande/:id', (req,res) => {
-  const { id } = req.params
-  Commande.findById(id, (error, data) => {
-    if(error) {
-      res.status(400).json(error)
-    }
-    if(data) {
-      res.status(200).json(data)
-    }
-  })
-})
-
-app.post('/commande', async (req, res) => {
-  const commande = new Commande()
-  commande.save(async (error,data) => {
-    if(error) {
-      res.status(400).json(error)
-    }
-    if(data) {
-      await rabbitmq.publishMessage({
-        id: data._id,
-        action: "process commande"
-      })
-      res.status(201).json(commande)
-    }
-  })
-})
-
-app.listen(port, () => console.log(`app listening on port ${port}!`))

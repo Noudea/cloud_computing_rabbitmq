@@ -2,15 +2,30 @@ version: '3'
 
 services:
 
-  ampq_node:
+  ampq_node_api:
     image: node:16
-    container_name: ampq_node
+    container_name: ampq_node_api
     volumes:
-      - .:/app
-    working_dir: /app
+      - ./api:/api
+    working_dir: /api
     ports:
       - "8000:8000"
-    command: bash -c "bash ./wait-for-it.sh ampq_rabbitmq:5672 --timeout=30 && yarn install && yarn start"
+    command: bash -c "bash ./wait-for-it.sh && yarn install && yarn dev"
+    depends_on:
+      - ampq_mongodb
+      - ampq_rabbitmq
+    networks:
+      - test_amqp_network
+
+  ampq_node_worker:
+    image: node:16
+    container_name: ampq_node_worker
+    volumes:
+      - ./worker:/worker
+    working_dir: /worker
+    ports:
+      - "8001:8001"
+    command: bash -c "bash ./wait-for-it.sh && yarn install && yarn dev"
     depends_on:
       - ampq_mongodb
       - ampq_rabbitmq
@@ -19,7 +34,7 @@ services:
 
   ampq_mongodb:
     container_name: ampq_mongodb
-    image: arm64v8/mongo:latest
+    image: mongo:latest
     ports:
       - "27017:27017"
     volumes:
