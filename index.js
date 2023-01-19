@@ -83,7 +83,7 @@ const rabbitmq = {
   commandeWorker: async function() {
     try {
       const channel = await rabbitMqChannel.getInstance()
-      channel.consume("commande", (msg) => {
+      await channel.consume("commande", (msg) => {
         if (msg !== null) {
           const { id ,action } = JSON.parse(msg.content)
           if(action === "process commande") {
